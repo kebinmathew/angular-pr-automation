@@ -39,6 +39,12 @@ module.exports = defineConfig([
       angular.configs.templateRecommended,
       angular.configs.templateAccessibility,
     ],
-    rules: {},
+    rules: {
+      "@angular-eslint/template/no-any": "error",
+      "@angular-eslint/template/banana-in-box": "error",
+      "@angular-eslint/template/no-call-expression": "error",
+      "@angular-eslint/template/no-negated-async": "error",
+      "@angular-eslint/template/no-inline-styles": "error",
+    },
   }
 ]);
