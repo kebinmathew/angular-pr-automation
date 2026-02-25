@@ -27,8 +27,7 @@ jobs:
 
       - name: Install reviewdog
         run: |
-          mkdir -p bin
-          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -b ./bin
+          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s
 
       # Run ESLint
       - name: Run ESLint
@@ -42,7 +41,8 @@ jobs:
       # Send to PR
       - name: Reviewdog
         run: |
-          reviewdog -f=checkstyle \
+          cat eslint-result.xml | ~/.local/bin/reviewdog \
+            -f=checkstyle \
             -name="angular-review" \
             -reporter=github-check \
             -level=warning
