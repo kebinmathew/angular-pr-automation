@@ -1,10 +1,10 @@
-name: Angular Review
+name: Angular PR Review
 
 on:
   pull_request:
 
 jobs:
-  review:
+  lint:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -17,32 +17,29 @@ jobs:
         with:
           node-version: 18
 
-      - uses: reviewdog/action-setup@v1
+      - name: Install deps
+        run: npm install
 
-      - name: Install dependencies
-        run: npm ci
-
-      # Install ESLint formatter for checkstyle XML
-      - name: Install ESLint formatter
-        run: npm install eslint-formatter-checkstyle --save-dev
+      - name: Install reviewdog
+        run: |
+          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s
 
       - name: Run ESLint
         run: |
-          npx eslint "src/**/*.{ts,html}" \
-            -f checkstyle \
-            -o eslint-result.xml || true
+          npx eslint "src/**/*.{ts,html}" -f checkstyle -o eslint-result.xml || true
 
-          # Ensure file exists (like your Java workflow)
-          if [ ! -s eslint-result.xml ]; then
-            echo '<?xml version="1.0"?><checkstyle version="1.0"></checkstyle>' > eslint-result.xml
+      - name: Ensure result file
+        run: |
+          if [ ! -f eslint-result.xml ]; then
+            echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
       - name: Reviewdog
         run: |
-          reviewdog -f=checkstyle \
+          cat eslint-result.xml | ./bin/reviewdog \
+            -f=checkstyle \
             -name="angular-review" \
             -reporter=github-pr-review \
-            -level=warning \
-            < eslint-result.xml
+            -level=warning
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
