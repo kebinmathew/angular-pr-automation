@@ -1,12 +1,11 @@
-name: Angular PR Review
+name: Angular Review
 
 on:
   pull_request:
 
 jobs:
-  lint:
+  review:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       pull-requests: write
@@ -18,22 +17,26 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install deps
-        run: npm install
-
-      # Install reviewdog (IMPORTANT)
       - uses: reviewdog/action-setup@v1
 
-      # Run ESLint
+      - name: Install dependencies
+        run: npm ci
+
+      # Install ESLint formatter for checkstyle XML
+      - name: Install ESLint formatter
+        run: npm install eslint-formatter-checkstyle --save-dev
+
       - name: Run ESLint
         run: |
-          npx eslint . -f checkstyle -o eslint-result.xml || true
+          npx eslint "src/**/*.{ts,html}" \
+            -f checkstyle \
+            -o eslint-result.xml || true
 
-          if [ ! -f eslint-result.xml ]; then
-            echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
+          # Ensure file exists (like your Java workflow)
+          if [ ! -s eslint-result.xml ]; then
+            echo '<?xml version="1.0"?><checkstyle version="1.0"></checkstyle>' > eslint-result.xml
           fi
 
-      # Send to PR
       - name: Reviewdog
         run: |
           reviewdog -f=checkstyle \
