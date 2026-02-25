@@ -6,6 +6,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       pull-requests: write
@@ -29,20 +30,19 @@ jobs:
           mkdir -p bin
           curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -b ./bin
 
+      # Run ESLint
       - name: Run ESLint
         run: |
           npx eslint $(find src -name "*.ts" -o -name "*.html") -f checkstyle -o eslint-result.xml || true
 
-      - name: Ensure result file
-        run: |
           if [ ! -f eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
+      # Send to PR
       - name: Reviewdog
         run: |
-          cat eslint-result.xml | ./bin/reviewdog \
-            -f=checkstyle \
+          reviewdog -f=checkstyle \
             -name="angular-review" \
             -reporter=github-check \
             -level=warning
