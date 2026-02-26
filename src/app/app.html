@@ -1,1 +1,9 @@
-<div (click)="test()">Click</div>
+<!-- BAD: Function call inside template -->
+<div>
+  {{ calculateTotal() }}
+</div>
+
+<!-- BAD: Function call inside binding -->
+<p [class.active]="isActive()">
+  Status
+</p>
