@@ -9,4 +9,7 @@ import { RouterOutlet } from '@angular/router';
 })
 export class App {
   protected readonly title = signal('angular-pr-review-demo');
+  
 }
+var x = 10;
+console.log("bad");
