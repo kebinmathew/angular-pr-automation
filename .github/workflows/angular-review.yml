@@ -12,36 +12,38 @@ jobs:
       pull-requests: write
 
     steps:
-      # Checkout code
       - uses: actions/checkout@v4
 
-      # Setup Node
       - uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # Install deps
-      - run: npm install
+      # install deps
+      - run: npm ci
 
-      # Install reviewdog (IMPORTANT)
+      # install reviewdog
       - uses: reviewdog/action-setup@v1
 
-      # Run ESLint
+      # 🔴 IMPORTANT: install checkstyle formatter
+      - name: Install formatter
+        run: npm install eslint-formatter-checkstyle --save-dev
+
+      # run eslint
       - name: Run ESLint
         run: |
           npx eslint "src/**/*.{ts,html}" \
           -f checkstyle \
           -o eslint-result.xml || true
 
-      # Ensure file exists
+      # ensure file exists
       - name: Ensure result file
         run: |
-          if [ ! -f eslint-result.xml ]; then
+          if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
-      # Reviewdog comment on PR
-      - name: Run Reviewdog
+      # reviewdog comment
+      - name: Reviewdog
         run: |
           reviewdog -f=checkstyle \
             -name="angular-review" \
