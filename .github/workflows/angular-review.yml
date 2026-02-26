@@ -12,18 +12,14 @@ jobs:
       pull-requests: write
 
     steps:
-      # Checkout code
       - uses: actions/checkout@v4
 
-      # Setup Node
       - uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # Install deps
       - run: npm install
 
-      # Install reviewdog (IMPORTANT)
       - uses: reviewdog/action-setup@v1
 
       # Run ESLint
@@ -31,21 +27,22 @@ jobs:
         run: |
           npx eslint "src/**/*.{ts,html}" \
           -f checkstyle \
-          -o eslint-result.xml || true
+          -o eslint-result.xml
+        continue-on-error: true
 
-      # Ensure file exists
+      # If file empty create dummy
       - name: Ensure result file
         run: |
           if [ ! -f eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
-      # Reviewdog comment on PR
+      # Reviewdog
       - name: Run Reviewdog
         run: |
           reviewdog -f=checkstyle \
             -name="angular-review" \
-            -reporter=github-pr-review \
+            -reporter=github-pr-check \
             -level=warning \
             < eslint-result.xml
         env:
