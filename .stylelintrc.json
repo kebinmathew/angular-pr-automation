@@ -1,0 +1,9 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "plugins": ["stylelint-scss"],
+  "rules": {
+    "selector-max-id": 0,
+    "block-no-empty": true,
+    "color-named": "never"
+  }
+}
