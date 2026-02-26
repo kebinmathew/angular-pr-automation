@@ -18,31 +18,36 @@ jobs:
         with:
           node-version: 18
 
-      - run: npm install
+      # install deps
+      - run: npm ci
 
+      # install reviewdog
       - uses: reviewdog/action-setup@v1
 
-      # Run ESLint
+      # 🔴 IMPORTANT: install checkstyle formatter
+      - name: Install formatter
+        run: npm install eslint-formatter-checkstyle --save-dev
+
+      # run eslint
       - name: Run ESLint
         run: |
           npx eslint "src/**/*.{ts,html}" \
           -f checkstyle \
-          -o eslint-result.xml
-        continue-on-error: true
+          -o eslint-result.xml || true
 
-      # If file empty create dummy
+      # ensure file exists
       - name: Ensure result file
         run: |
-          if [ ! -f eslint-result.xml ]; then
+          if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
-      # Reviewdog
-      - name: Run Reviewdog
+      # reviewdog comment
+      - name: Reviewdog
         run: |
           reviewdog -f=checkstyle \
             -name="angular-review" \
-            -reporter=github-pr-check \
+            -reporter=github-pr-review \
             -level=warning \
             < eslint-result.xml
         env:
