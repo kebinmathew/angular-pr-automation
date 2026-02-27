@@ -12,34 +12,34 @@ jobs:
       pull-requests: write
 
     steps:
-      # ---------------------------------
-      # Checkout
-      # ---------------------------------
+      # -------------------------------------------------
+      # Checkout repository
+      # -------------------------------------------------
       - uses: actions/checkout@v4
 
-      # ---------------------------------
-      # Node 20 (required)
-      # ---------------------------------
+      # -------------------------------------------------
+      # Setup Node 20 (Required for Stylelint)
+      # -------------------------------------------------
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 20
 
-      # ---------------------------------
-      # Install project deps
-      # ---------------------------------
+      # -------------------------------------------------
+      # Install project dependencies
+      # -------------------------------------------------
       - name: Install dependencies
         run: npm ci
 
-      # ---------------------------------
-      # Setup reviewdog (binary install)
-      # ---------------------------------
+      # -------------------------------------------------
+      # Setup reviewdog
+      # -------------------------------------------------
       - uses: reviewdog/action-setup@v1
 
       # =====================================================
-      # ESLINT (TS + HTML)
+      # ESLINT (TypeScript + Angular HTML)
       # =====================================================
 
-      - name: Install ESLint formatter
+      - name: Install ESLint checkstyle formatter
         run: npm install eslint-formatter-checkstyle --save-dev
 
       - name: Run ESLint
@@ -48,6 +48,7 @@ jobs:
             -f checkstyle \
             -o eslint-result.xml || true
 
+          # Ensure file exists to prevent failure
           if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
@@ -75,6 +76,7 @@ jobs:
             --formatter json \
             > stylelint-result.json || true
 
+          # Ensure file exists
           if [ ! -s stylelint-result.json ]; then
             echo "[]" > stylelint-result.json
           fi
@@ -85,6 +87,6 @@ jobs:
             -name="angular-stylelint-review" \
             -reporter=github-pr-review \
             -level=warning \
-            < stylelint-result.json
+            stylelint-result.json
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
