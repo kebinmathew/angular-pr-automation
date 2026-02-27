@@ -6,31 +6,44 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       pull-requests: write
 
     steps:
+      # -----------------------------------------
+      # Checkout code
+      # -----------------------------------------
       - uses: actions/checkout@v4
 
-      # ✅ Use modern Node
+      # -----------------------------------------
+      # Setup Node (Stylelint requires Node 20+)
+      # -----------------------------------------
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 20
 
-      # ✅ Install dependencies
+      # -----------------------------------------
+      # Install project dependencies
+      # -----------------------------------------
       - name: Install dependencies
         run: npm ci
 
-      # ✅ Setup reviewdog
+      # -----------------------------------------
+      # Setup reviewdog
+      # -----------------------------------------
       - uses: reviewdog/action-setup@v1
 
-      # =====================================================
-      # ESLINT (TS + HTML)
-      # =====================================================
-
+      # -----------------------------------------
+      # Install ESLint checkstyle formatter
+      # -----------------------------------------
       - name: Install ESLint formatter
         run: npm install eslint-formatter-checkstyle --save-dev
+
+      # =====================================================
+      # ESLINT (TypeScript + Angular HTML)
+      # =====================================================
 
       - name: Run ESLint
         run: |
@@ -38,6 +51,7 @@ jobs:
             -f checkstyle \
             -o eslint-result.xml || true
 
+          # Ensure file exists
           if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
@@ -62,20 +76,20 @@ jobs:
       - name: Run Stylelint
         run: |
           npx stylelint "src/**/*.{css,scss}" \
-            --formatter unix \
-            > stylelint-result.txt || true
+            --formatter checkstyle \
+            --output-file stylelint-result.xml || true
 
-          if [ ! -s stylelint-result.txt ]; then
-            echo "" > stylelint-result.txt
+          # Ensure file exists
+          if [ ! -s stylelint-result.xml ]; then
+            echo '<?xml version="1.0"?><checkstyle></checkstyle>' > stylelint-result.xml
           fi
 
       - name: Reviewdog Stylelint
         run: |
-          reviewdog -f=stylelint \
+          reviewdog -f=checkstyle \
             -name="angular-stylelint-review" \
             -reporter=github-pr-review \
             -level=warning \
-            < stylelint-result.txt
+            < stylelint-result.xml
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
