@@ -12,27 +12,27 @@ jobs:
       pull-requests: write
 
     steps:
-      # -----------------------------------------
+      # ---------------------------------
       # Checkout
-      # -----------------------------------------
+      # ---------------------------------
       - uses: actions/checkout@v4
 
-      # -----------------------------------------
-      # Setup Node 20 (required for Stylelint)
-      # -----------------------------------------
+      # ---------------------------------
+      # Node 20 (required)
+      # ---------------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
-      # -----------------------------------------
-      # Install project dependencies
-      # -----------------------------------------
+      # ---------------------------------
+      # Install project deps
+      # ---------------------------------
       - name: Install dependencies
         run: npm ci
 
-      # -----------------------------------------
-      # Setup reviewdog
-      # -----------------------------------------
+      # ---------------------------------
+      # Setup reviewdog (binary install)
+      # ---------------------------------
       - uses: reviewdog/action-setup@v1
 
       # =====================================================
@@ -63,7 +63,7 @@ jobs:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # =====================================================
-      # STYLELINT (CSS + SCSS) - Modern Version
+      # STYLELINT (CSS + SCSS)
       # =====================================================
 
       - name: Install Stylelint
@@ -79,9 +79,9 @@ jobs:
             echo "[]" > stylelint-result.json
           fi
 
-      - name: Convert Stylelint JSON to RDJSON
+      - name: Reviewdog Stylelint
         run: |
-          npx reviewdog -f=stylelint \
+          reviewdog -f=stylelint \
             -name="angular-stylelint-review" \
             -reporter=github-pr-review \
             -level=warning \
