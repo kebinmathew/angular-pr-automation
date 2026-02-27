@@ -12,81 +12,71 @@ jobs:
       pull-requests: write
 
     steps:
-      # -------------------------------------------------
-      # Checkout repository
-      # -------------------------------------------------
       - uses: actions/checkout@v4
 
-      # -------------------------------------------------
-      # Setup Node 20 (Required for Stylelint)
-      # -------------------------------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
-      # -------------------------------------------------
-      # Install project dependencies
-      # -------------------------------------------------
-      - name: Install dependencies
-        run: npm ci
+      # install deps
+      - run: npm ci
 
-      # -------------------------------------------------
-      # Setup reviewdog
-      # -------------------------------------------------
+      # install reviewdog
       - uses: reviewdog/action-setup@v1
 
-      # =====================================================
-      # ESLINT (TypeScript + Angular HTML)
-      # =====================================================
-
-      - name: Install ESLint checkstyle formatter
+      # 🔴 IMPORTANT: install checkstyle formatter
+      - name: Install formatter
         run: npm install eslint-formatter-checkstyle --save-dev
 
+      # run eslint
       - name: Run ESLint
         run: |
-          npx eslint "src/**/*.{ts,html}" \
-            -f checkstyle \
-            -o eslint-result.xml || true
+          npx eslint . \
+          -f checkstyle \
+          -o eslint-result.xml || true
 
-          # Ensure file exists to prevent failure
+      # ensure file exists
+      - name: Ensure result file
+        run: |
           if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
-      - name: Reviewdog ESLint
+      # reviewdog comment
+      - name: Reviewdog
         run: |
           reviewdog -f=checkstyle \
-            -name="angular-eslint-review" \
+            -name="angular-review" \
             -reporter=github-pr-review \
             -level=warning \
             < eslint-result.xml
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # =====================================================
+      # ----------------------------
       # STYLELINT (CSS + SCSS)
-      # =====================================================
-
+      # ----------------------------
       - name: Install Stylelint
         run: npm install stylelint stylelint-config-standard stylelint-scss --save-dev
 
       - name: Run Stylelint
         run: |
-          npx stylelint "src/**/*.{css,scss}" \
-            --formatter json \
-            > stylelint-result.json || true
+          npx stylelint "**/*.{css,scss}" \
+          --formatter checkstyle \
+          --output-file stylelint-result.xml || true
 
-          # Ensure file exists
-          if [ ! -s stylelint-result.json ]; then
-            echo "[]" > stylelint-result.json
+      - name: Ensure Stylelint file
+        run: |
+          if [ ! -s stylelint-result.xml ]; then
+            echo '<?xml version="1.0"?><checkstyle></checkstyle>' > stylelint-result.xml
           fi
 
       - name: Reviewdog Stylelint
         run: |
-          reviewdog -f=stylelint \
-            -name="angular-stylelint-review" \
+          reviewdog -f=checkstyle \
+            -name="css-review" \
             -reporter=github-pr-review \
             -level=warning \
-            stylelint-result.json
+            < stylelint-result.xml
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
