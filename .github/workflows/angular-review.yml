@@ -24,25 +24,25 @@ jobs:
       # install reviewdog
       - uses: reviewdog/action-setup@v1
 
-      # 🔴 IMPORTANT: install ESLint checkstyle formatter
+      # ----------------------------
+      # ESLINT (TS + HTML)
+      # ----------------------------
+
       - name: Install ESLint formatter
         run: npm install eslint-formatter-checkstyle --save-dev
 
-      # run eslint
       - name: Run ESLint
         run: |
           npx eslint . \
           -f checkstyle \
           -o eslint-result.xml || true
 
-      # ensure file exists
       - name: Ensure ESLint result file
         run: |
           if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
-      # reviewdog comment for ESLint
       - name: Reviewdog ESLint
         run: |
           reviewdog -f=checkstyle \
@@ -59,26 +59,24 @@ jobs:
 
       - name: Install Stylelint
         run: |
-          npm install stylelint stylelint-config-standard stylelint-scss stylelint-formatter-checkstyle --save-dev
+          npm install stylelint stylelint-config-standard stylelint-scss --save-dev
 
       - name: Run Stylelint
         run: |
           npx stylelint "**/*.{css,scss}" \
-          --custom-formatter node_modules/stylelint-formatter-checkstyle \
-          --output-file stylelint-result.xml || true
+            --formatter json \
+            > stylelint-result.json || true
 
-      - name: Ensure Stylelint result file
-        run: |
-          if [ ! -s stylelint-result.xml ]; then
-            echo '<?xml version="1.0"?><checkstyle></checkstyle>' > stylelint-result.xml
+          if [ ! -s stylelint-result.json ]; then
+            echo "[]" > stylelint-result.json
           fi
 
       - name: Reviewdog Stylelint
         run: |
-          reviewdog -f=checkstyle \
+          reviewdog -f=stylelint \
             -name="css-review" \
             -reporter=github-pr-review \
             -level=warning \
-            < stylelint-result.xml
+            < stylelint-result.json
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
