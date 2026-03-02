@@ -2,6 +2,12 @@ name: Angular PR Review
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**/*.ts'
+      - '**/*.html'
+      - '**/*.css'
+      - '**/*.scss'
 
 jobs:
   lint:
@@ -18,54 +24,57 @@ jobs:
         with:
           node-version: 20.x
 
-      # install deps
-      - run: npm ci
+      # Install project dependencies
+      - name: Install dependencies
+        run: npm ci
 
-      # install reviewdog
+      # Install reviewdog
       - uses: reviewdog/action-setup@v1
 
-      # 🔴 IMPORTANT: install checkstyle formatter
-      - name: Install formatter
+      # -------------------------------------------------
+      # ESLINT (TS + HTML)
+      # -------------------------------------------------
+
+      - name: Install ESLint Checkstyle Formatter
         run: npm install eslint-formatter-checkstyle --save-dev
 
-      # run eslint
       - name: Run ESLint
         run: |
           npx eslint . \
           -f checkstyle \
           -o eslint-result.xml || true
 
-      # ensure file exists
-      - name: Ensure result file
+      - name: Ensure ESLint result file exists
         run: |
           if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
-      # reviewdog comment
-      - name: Reviewdog
+      - name: Reviewdog ESLint
         run: |
           reviewdog -f=checkstyle \
-            -name="angular-review" \
+            -name="angular-eslint-review" \
             -reporter=github-pr-review \
             -level=warning \
             < eslint-result.xml
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ----------------------------
+      # -------------------------------------------------
       # STYLELINT (CSS + SCSS)
-      # ----------------------------
-      - name: Install Stylelint
-        run: npm install stylelint stylelint-config-standard stylelint-scss --save-dev
+      # -------------------------------------------------
+
+      - name: Install Stylelint + Formatter
+        run: |
+          npm install stylelint stylelint-config-standard stylelint-scss stylelint-formatter-checkstyle --save-dev
 
       - name: Run Stylelint
         run: |
           npx stylelint "**/*.{css,scss}" \
-          --formatter checkstyle \
+          --custom-formatter stylelint-formatter-checkstyle \
           --output-file stylelint-result.xml || true
 
-      - name: Ensure Stylelint file
+      - name: Ensure Stylelint result file exists
         run: |
           if [ ! -s stylelint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > stylelint-result.xml
@@ -74,7 +83,7 @@ jobs:
       - name: Reviewdog Stylelint
         run: |
           reviewdog -f=checkstyle \
-            -name="css-review" \
+            -name="angular-stylelint-review" \
             -reporter=github-pr-review \
             -level=warning \
             < stylelint-result.xml
