@@ -65,8 +65,13 @@ jobs:
         run: |
           npx stylelint "**/*.{css,scss}" \
             --formatter json \
-            > stylelint-result.json || true
+            > raw-stylelint.json || true
 
+          # Convert absolute paths to relative
+          cat raw-stylelint.json | \
+          sed "s|$GITHUB_WORKSPACE/||g" \
+          > stylelint-result.json
+          
           if [ ! -s stylelint-result.json ]; then
             echo "[]" > stylelint-result.json
           fi
