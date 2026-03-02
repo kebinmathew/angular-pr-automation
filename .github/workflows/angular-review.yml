@@ -12,29 +12,29 @@ jobs:
       pull-requests: write
 
     steps:
-      # ----------------------------
+      # ------------------------------------------------
       # Checkout
-      # ----------------------------
+      # ------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ----------------------------
+      # ------------------------------------------------
       # Setup Node
-      # ----------------------------
+      # ------------------------------------------------
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # ----------------------------
-      # Install Dependencies
-      # ----------------------------
-      - name: Install project dependencies
+      # ------------------------------------------------
+      # Install Project Dependencies
+      # ------------------------------------------------
+      - name: Install dependencies
         run: npm ci
 
-      # ----------------------------
+      # ------------------------------------------------
       # Setup Reviewdog
-      # ----------------------------
+      # ------------------------------------------------
       - name: Setup Reviewdog
         uses: reviewdog/action-setup@v1
 
@@ -42,22 +42,19 @@ jobs:
       # ESLINT (TS + HTML)
       # ============================================================
 
-      - name: Install ESLint Checkstyle Formatter
+      - name: Install ESLint formatter
         run: npm install eslint-formatter-checkstyle --save-dev
 
-      - name: Run ESLint
+      - name: Run ESLint and comment PR
         run: |
           npx eslint "src/**/*.{ts,html}" \
             -f checkstyle \
             -o eslint-result.xml || true
 
-          # ensure file exists
           if [ ! -s eslint-result.xml ]; then
             echo '<?xml version="1.0"?><checkstyle></checkstyle>' > eslint-result.xml
           fi
 
-      - name: Reviewdog ESLint
-        run: |
           reviewdog -f=checkstyle \
             -name="angular-eslint-review" \
             -reporter=github-pr-review \
@@ -70,31 +67,19 @@ jobs:
       # STYLELINT (CSS + SCSS)
       # ============================================================
 
-      - name: Install Stylelint + Checkstyle Formatter
+      - name: Install Stylelint
         run: |
-          npm install stylelint \
-                      stylelint-config-standard \
-                      stylelint-scss \
-                      stylelint-formatter-checkstyle \
-                      --save-dev
+          npm install stylelint stylelint-config-standard stylelint-scss --save-dev
 
-      - name: Run Stylelint
+      - name: Run Stylelint and comment PR
         run: |
           npx stylelint "src/**/*.{css,scss}" \
-            --formatter checkstyle \
-            > stylelint-result.xml || true
-
-          # ensure file exists
-          if [ ! -s stylelint-result.xml ]; then
-            echo '<?xml version="1.0"?><checkstyle></checkstyle>' > stylelint-result.xml
-          fi
-
-      - name: Reviewdog Stylelint
-        run: |
-          reviewdog -f=checkstyle \
-            -name="angular-stylelint-review" \
-            -reporter=github-pr-review \
-            -level=warning \
-            < stylelint-result.xml
+            --formatter unix \
+            || true \
+          | reviewdog \
+              -f=stylelint \
+              -name="angular-stylelint-review" \
+              -reporter=github-pr-review \
+              -level=warning
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
