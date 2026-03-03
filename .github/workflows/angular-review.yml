@@ -62,7 +62,7 @@ jobs:
       - name: Run Stylelint
         run: |
           npx stylelint "**/*.{css,scss}" \
-          --formatter checkstyle \
+          --custom-formatter=stylelint-checkstyle-formatter \
           --output-file stylelint-result.xml || true
 
       - name: Ensure Stylelint file
