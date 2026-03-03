@@ -55,15 +55,14 @@ jobs:
 
       # ----------------------------
       # STYLELINT (CSS + SCSS)
-      # ----------------------------
-      - name: Install Stylelint
-        run: npm install stylelint stylelint-config-standard stylelint-scss --save-dev
-
-      - name: Run Stylelint
-        run: |
-          npx stylelint "**/*.{css,scss}" \
-          --formatter json \
-          --output-file stylelint-result.json || true
+      # ---------------------------
+      - name: Run Stylelint with Reviewdog
+        uses: reviewdog/action-stylelint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: warning
+          stylelint_flags: '"**/*.{css,scss}"'
 
       - name: Ensure Stylelint file
         run: |
