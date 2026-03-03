@@ -1,7 +1,38 @@
-#header {
-  color: red;
+/* 1. Missing generic font family */
+body {
+  font-family: "Helvetica Neue", Arial;
+  /* 2. Zero with unit */
+  margin: 0px;
+  /* 3. Redundant shorthand */
+  padding: 10px 10px 10px 10px;
 }
 
-.empty {
+/* 4. ID selector */
+#main-navigation {
+  /* 5. Named color */
+  background-color: darkblue;
+  /* 6. Duplicate properties */
+  display: block;
+  display: flex;
+  /* 7. Unknown unit */
+  width: 100pix;
+}
 
+/* 8. Empty block */
+.placeholder-box {
+}
+
+/* 9. Invalid class pattern (Standard config expects kebab-case) */
+.myCamelCaseClass {
+  /* 10. Unknown property (Typo) */
+  bakground: #ffffff;
+  /* 11. Long hex code (Standard prefers shorthand like #fff) */
+  color: #ffffff;
+}
+
+/* 12. Unnecessary vendor prefixes (Standard assumes you use Autoprefixer) */
+.rounded-corners {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
 }
