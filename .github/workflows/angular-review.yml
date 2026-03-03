@@ -64,19 +64,4 @@ jobs:
           level: warning
           stylelint_flags: '"**/*.{css,scss}"'
 
-      - name: Ensure Stylelint file
-        run: |
-          if [ ! -s stylelint-result.xml ]; then
-            echo '<?xml version="1.0"?><checkstyle></checkstyle>' > stylelint-result.xml
-          fi
-
-      - name: Reviewdog Stylelint
-        run: |
-          reviewdog -f=stylelint \
-            -name="css-review" \
-            -reporter=github-pr-check \
-            -filter-mode=added \
-            -level=warning \
-            < stylelint-result.json
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
