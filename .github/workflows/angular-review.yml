@@ -75,7 +75,8 @@ jobs:
         run: |
           reviewdog -f=stylelint \
             -name="css-review" \
-            -reporter=github-pr-review \
+            -reporter=github-pr-check \
+            -filter-mode=added \
             -level=warning \
             < stylelint-result.json
         env:
